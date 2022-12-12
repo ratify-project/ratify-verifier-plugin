@@ -1,63 +1,86 @@
-/*
-Copyright The Ratify Authors.
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/deislabs/ratify/pkg/common"
 	"github.com/deislabs/ratify/pkg/ocispecs"
 	"github.com/deislabs/ratify/pkg/referrerstore"
 	"github.com/deislabs/ratify/pkg/verifier"
 	"github.com/deislabs/ratify/pkg/verifier/plugin/skel"
+
+	// Imports are required to utilize built-in referrer stores
+	_ "github.com/deislabs/ratify/pkg/referrerstore/oras"
 )
 
+// These values are used in Ratify configuration to identify the plugin
+const (
+	pluginName    = "sample"
+	pluginVersion = "1.0.0"
+)
+
+// Configuration specific to your plugin is defined here
+// This is what determines the verifier properties available in your Ratify configuration
 type PluginConfig struct {
-	Name string `json:"name"`
-	// config specific to the plugin
+	Name              string   `json:"name"`
+	AllowedPrefixes   []string `json:"allowedPrefixes"`
 }
 
+// Used to unwrap the envelope of data passed to the plugin via STDIN
 type PluginInputConfig struct {
 	Config PluginConfig `json:"config"`
 }
 
+// Use the plugin skeleton provided by Ratify
 func main() {
-	skel.PluginMain("sample", "1.0.0", VerifyReference, []string{"1.0.0"})
+	skel.PluginMain(pluginName, pluginVersion, VerifyReference, []string{pluginVersion})
 }
 
-func parseInput(stdin []byte) (*PluginConfig, error) {
-	conf := PluginInputConfig{}
+// Given an input subject, determine whether it is considered successfully verified
+func VerifyReference(args *skel.CmdArgs, subjectReference common.Reference, referenceDescriptor ocispecs.ReferenceDescriptor, referrerStore referrerstore.ReferrerStore) (*verifier.VerifierResult, error) {
 
-	if err := json.Unmarshal(stdin, &conf); err != nil {
+	// Parse the configuration from STDIN
+	inputConf := PluginInputConfig{}
+	if err := json.Unmarshal(args.StdinData, &inputConf); err != nil {
 		return nil, fmt.Errorf("failed to parse stdin for the input: %v", err)
 	}
+	config := inputConf.Config
 
-	return &conf.Config, nil
-}
+	// sample verification: check if the subject reference is allowed against the list of allowed prefixes
+	isSuccess := false
+	message := fmt.Sprintf("Sample verification failure: subject did not begin with any of the allowed prefixes: %v", config.AllowedPrefixes)
+	for _, prefix := range config.AllowedPrefixes {
+		if strings.HasPrefix(subjectReference.Original, prefix) {
+			isSuccess = true
+			message = "Sample verification success"
+			break
+		}
+	}
 
-func VerifyReference(args *skel.CmdArgs, subjectReference common.Reference, referenceDescriptor ocispecs.ReferenceDescriptor, referrerStore referrerstore.ReferrerStore) (*verifier.VerifierResult, error) {
-	input, err := parseInput(args.StdinData)
+	// sample usage of referrer store: get the reference manifest
+	referenceManifest, err := referrerStore.GetReferenceManifest(context.TODO(), subjectReference, referenceDescriptor)
+	if err != nil {
+		return nil, err
+	}
+
+	// sample usage of referrer store: get the length of the first blob
+	blobData, err := referrerStore.GetBlobContent(context.TODO(), subjectReference, referenceManifest.Blobs[0].Digest)
 	if err != nil {
 		return nil, err
 	}
 
 	return &verifier.VerifierResult{
-		Name:      input.Name,
-		IsSuccess: referenceDescriptor.Size > 0,
-		Message:   "Sample verification success",
+		Name:      config.Name,
+		IsSuccess: isSuccess,
+		Message:   message,
+
+		// You can optionally include extension data for processing by downstream consumers (ex: Rego policies)
+		Extensions: map[string]interface{}{
+			"hello": "world",
+			"firstBlobBytes": len(blobData),
+		},
 	}, nil
 }
