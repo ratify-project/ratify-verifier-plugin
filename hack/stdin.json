@@ -1,7 +1,10 @@
 {
   "config": {
-    "artifactTypes": "application/vnd.cncf.notary.v2.signature",
-    "name": "sample"
+    "artifactTypes": "application/vnd.cncf.notary.signature",
+    "name": "sample",
+    "allowedPrefixes": [
+      "wabbitnetworks.azurecr.io/"
+    ]
   },
   "storeConfig": {
     "version": "1.0.0",
@@ -11,9 +14,9 @@
     }
   },
   "referenceDesc": {
-    "mediaType": "application/vnd.cncf.oras.artifact.manifest.v1+json",
-    "digest": "sha256:64292c37bc0ff705fba8cb9051933747297bf05cc10bfa8bf074270a76a874e3",
-    "size": 512,
-    "artifactType": "application/vnd.cncf.notary.v2.signature"
+    "mediaType": "application/vnd.oci.artifact.manifest.v1+json",
+    "digest": "sha256:bed466339e8f7353354f95ee747cabba324a13ecae3e8952b6f32b2bbdbeea1c",
+    "size": 625,
+    "artifactType": "application/vnd.cncf.notary.signature"
   }
 }

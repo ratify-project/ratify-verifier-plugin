@@ -2,6 +2,13 @@
 
 This is a sample verifier plugin for [Ratify](https://github.com/deislabs/ratify), written in Go
 
+It exercises a range of functions to help you get started writing your own plugin:
+
+- Defining and using configuration options
+- Using a referrer store
+- Generating a result with success/failure
+- Attaching additional extension data
+
 For more details on how plugins work, please visit the [verifier specification](https://github.com/deislabs/ratify/blob/main/docs/verifier.md)
 
 ## Usage
@@ -21,7 +28,7 @@ Ratify plugins use a combination of environment variables and STDIN to run plugi
 # Run the plugin standalone
 export RATIFY_VERIFIER_VERSION=1.0.0
 export RATIFY_VERIFIER_COMMAND=VERIFY
-export RATIFY_VERIFIER_SUBJECT=wabbitnetworks.azurecr.io/test/net-monitor:signed
+export RATIFY_VERIFIER_SUBJECT=wabbitnetworks.azurecr.io/test/notary-image:signed
 cat hack/stdin.json | ./sample
 ```
 
@@ -62,10 +69,7 @@ Next, add an entry to `verifier.plugins` in the Ratify config to activate your v
   "policy": {
     "version": "1.0.0",
     "plugin": {
-      "name": "configPolicy",
-      "artifactVerificationPolicies": {
-        "application/vnd.cncf.notary.v2.signature": "all"
-      }
+      "name": "configPolicy"
     }
   },
   "verifier": {
@@ -73,17 +77,12 @@ Next, add an entry to `verifier.plugins` in the Ratify config to activate your v
     "plugins": [
       {
         "name": "sample",
-        "artifactTypes": "application/vnd.cncf.notary.v2.signature"
-      },
-      {
-        "name": "notaryv2",
-        "artifactTypes": "application/vnd.cncf.notary.v2.signature"
+        "artifactTypes": "application/vnd.cncf.notary.signature"
       }
     ]
   }
 }
 ```
-
 
 ### Deploy with Ratify to Kubernetes
 
@@ -93,11 +92,14 @@ Ratify ships a [distroless](https://github.com/GoogleContainerTools/distroless) 
 CGO_ENABLED=0 go build -o sample .
 ```
 
-Regardless of how you build and distribute your plugin, users need to have it accessible within their Ratify container. Ex:
+Next, users will need to have the plugin within their Ratify pod in order to use it at runtime.
+
+#### Custom Ratify Image
+
+One possible method to distribute plugins is by building a custom Ratify image
 
 ```Dockerfile
-# See note on CRDs below; this version won't work as-is yet
-FROM ghcr.io/deislabs/ratify:v1.0.0-alpha.3 AS ratify
+FROM ghcr.io/deislabs/ratify:v1.0.0-beta.2 AS ratify
 
 COPY ./sample /.ratify/plugins/sample
 ```
@@ -105,9 +107,8 @@ COPY ./sample /.ratify/plugins/sample
 You'll need to use this image, which contains your plugin, in your Ratify chart deployment. Ex:
 
 ```shell
-# See note on CRDs below; this version of Ratify won't work as-is yet
-docker build -t myregistry.azurecr.io/ratify-with-plugins:v1.0.0-alpha.3 .
-docker push myregistry.azurecr.io/ratify-with-plugins:v1.0.0-alpha.3
+docker build -t myregistry.azurecr.io/ratify-with-plugins:v1.0.0-beta.2 .
+docker push myregistry.azurecr.io/ratify-with-plugins:v1.0.0-beta.2
 ```
 
 And in your Ratify [chart](https://github.com/deislabs/ratify/tree/main/charts/ratify) values:
@@ -115,18 +116,12 @@ And in your Ratify [chart](https://github.com/deislabs/ratify/tree/main/charts/r
 ```yaml
 image:
   repository: myregistry.azurecr.io/ratify-with-plugins
-  tag: v1.0.0-alpha.3
+  tag: v1.0.0-beta.2
   pullPolicy: IfNotPresent
 # /snip...
 ```
 
-#### Temporary workaround: v1.0.0-alpha.3
-
-This gets you a Ratify deployment with your plugin available. The final step is to activate it by adding updating your `ratify-configuration` ConfigMap
-
-#### Future
-
-> Note: Ratify CRD support [just landed](https://github.com/deislabs/ratify/pull/349/files), but it hasn't been published yet, so this doesn't actually work unless you build all of Ratify yourself
+#### Configuration
 
 Create a `Verifier` resource to register your custom plugin
 
@@ -137,8 +132,10 @@ metadata:
   name: verifier-sample
 spec:
   name: sample
-  artifactTypes: application/vnd.cncf.notary.v2.signature
-  parameters: {}
+  artifactTypes: application/vnd.cncf.notary.signature
+  # extra configuration for your plugin goes here
+  allowedPrefixes:
+    - "wabbitnetworks.azurecr.io/"
 ```
 
 ## Contributing
