@@ -1,4 +1,4 @@
-module github.com/noelbundick-msft/ratify-verifier-plugin
+module github.com/ratify-project/ratify-verifier-plugin
 
 go 1.19
 
