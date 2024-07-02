@@ -126,7 +126,7 @@ image:
 Create a `Verifier` resource to register your custom plugin
 
 ```yaml
-apiVersion: config.ratify.ratify-project.io/v1alpha1
+apiVersion: config.ratify.deislabs.io/v1alpha1
 kind: Verifier
 metadata:
   name: verifier-sample
