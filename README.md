@@ -99,7 +99,7 @@ Next, users will need to have the plugin within their Ratify pod in order to use
 One possible method to distribute plugins is by building a custom Ratify image
 
 ```Dockerfile
-FROM ghcr.io/ratify-project/ratify:v1.2.0 AS ratify
+FROM ghcr.io/ratify-project/ratify:v1.2.1 AS ratify
 
 COPY ./sample /.ratify/plugins/sample
 ```
@@ -107,8 +107,8 @@ COPY ./sample /.ratify/plugins/sample
 You'll need to use this image, which contains your plugin, in your Ratify chart deployment. Ex:
 
 ```shell
-docker build -t myregistry.azurecr.io/ratify-with-plugins:v1.2.0 .
-docker push myregistry.azurecr.io/ratify-with-plugins:v1.2.0
+docker build -t myregistry.azurecr.io/ratify-with-plugins:v1.2.1 .
+docker push myregistry.azurecr.io/ratify-with-plugins:v1.2.1
 ```
 
 And in your Ratify [chart](https://github.com/ratify-project/ratify/tree/main/charts/ratify) values:
@@ -116,7 +116,7 @@ And in your Ratify [chart](https://github.com/ratify-project/ratify/tree/main/ch
 ```yaml
 image:
   repository: myregistry.azurecr.io/ratify-with-plugins
-  tag: v1.2.0
+  tag: v1.2.1
   pullPolicy: IfNotPresent
 # /snip...
 ```
