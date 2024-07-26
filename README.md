@@ -1,6 +1,6 @@
 # ratify-verifier-plugin
 
-This is a sample verifier plugin for [Ratify](https://github.com/deislabs/ratify), written in Go
+This is a sample verifier plugin for [Ratify](https://github.com/ratify-project/ratify), written in Go
 
 It exercises a range of functions to help you get started writing your own plugin:
 
@@ -9,7 +9,7 @@ It exercises a range of functions to help you get started writing your own plugi
 - Generating a result with success/failure
 - Attaching additional extension data
 
-For more details on how plugins work, please visit the [verifier specification](https://github.com/deislabs/ratify/blob/main/docs/verifier.md)
+For more details on how plugins work, please visit the [verifier specification](https://github.com/ratify-project/ratify/blob/main/docs/verifier.md)
 
 ## Usage
 
@@ -99,7 +99,7 @@ Next, users will need to have the plugin within their Ratify pod in order to use
 One possible method to distribute plugins is by building a custom Ratify image
 
 ```Dockerfile
-FROM ghcr.io/deislabs/ratify:v1.0.0-beta.2 AS ratify
+FROM ghcr.io/ratify-project/ratify:v1.2.1 AS ratify
 
 COPY ./sample /.ratify/plugins/sample
 ```
@@ -107,16 +107,16 @@ COPY ./sample /.ratify/plugins/sample
 You'll need to use this image, which contains your plugin, in your Ratify chart deployment. Ex:
 
 ```shell
-docker build -t myregistry.azurecr.io/ratify-with-plugins:v1.0.0-beta.2 .
-docker push myregistry.azurecr.io/ratify-with-plugins:v1.0.0-beta.2
+docker build -t myregistry.azurecr.io/ratify-with-plugins:v1.2.1 .
+docker push myregistry.azurecr.io/ratify-with-plugins:v1.2.1
 ```
 
-And in your Ratify [chart](https://github.com/deislabs/ratify/tree/main/charts/ratify) values:
+And in your Ratify [chart](https://github.com/ratify-project/ratify/tree/main/charts/ratify) values:
 
 ```yaml
 image:
   repository: myregistry.azurecr.io/ratify-with-plugins
-  tag: v1.0.0-beta.2
+  tag: v1.2.1
   pullPolicy: IfNotPresent
 # /snip...
 ```
@@ -153,4 +153,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/)
 or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-For additional information, please visit [Contributing to Ratify](https://github.com/deislabs/ratify/blob/main/CONTRIBUTING.md)
+For additional information, please visit [Contributing to Ratify](https://github.com/ratify-project/ratify/blob/main/CONTRIBUTING.md)
