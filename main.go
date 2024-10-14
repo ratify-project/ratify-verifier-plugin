@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/deislabs/ratify/pkg/common"
-	"github.com/deislabs/ratify/pkg/ocispecs"
-	"github.com/deislabs/ratify/pkg/referrerstore"
-	"github.com/deislabs/ratify/pkg/verifier"
-	"github.com/deislabs/ratify/pkg/verifier/plugin/skel"
+	"github.com/ratify-project/ratify/pkg/common"
+	"github.com/ratify-project/ratify/pkg/ocispecs"
+	"github.com/ratify-project/ratify/pkg/referrerstore"
+	"github.com/ratify-project/ratify/pkg/verifier"
+	"github.com/ratify-project/ratify/pkg/verifier/plugin/skel"
 
 	// Imports are required to utilize built-in referrer stores
-	_ "github.com/deislabs/ratify/pkg/referrerstore/oras"
+	_ "github.com/ratify-project/ratify/pkg/referrerstore/oras"
 )
 
 // These values are used in Ratify configuration to identify the plugin
@@ -25,8 +25,8 @@ const (
 // Configuration specific to your plugin is defined here
 // This is what determines the verifier properties available in your Ratify configuration
 type PluginConfig struct {
-	Name              string   `json:"name"`
-	AllowedPrefixes   []string `json:"allowedPrefixes"`
+	Name            string   `json:"name"`
+	AllowedPrefixes []string `json:"allowedPrefixes"`
 }
 
 // Used to unwrap the envelope of data passed to the plugin via STDIN
@@ -79,7 +79,7 @@ func VerifyReference(args *skel.CmdArgs, subjectReference common.Reference, refe
 
 		// You can optionally include extension data for processing by downstream consumers (ex: Rego policies)
 		Extensions: map[string]interface{}{
-			"hello": "world",
+			"hello":          "world",
 			"firstBlobBytes": len(blobData),
 		},
 	}, nil
